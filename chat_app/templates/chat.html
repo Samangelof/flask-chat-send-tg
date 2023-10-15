@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Простой Чат</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <h2>Чат: <span id="room_name">{{ channel_link }}</span></h2>
+    <div id="user_email" style="display: block;">{{ email }}</div>
+    <ul id="user_list"></ul>
+    <div id="chat"></div>
+    <form id="chat_form">
+        <input type="text" id="message" placeholder="Введите сообщение" autocomplete="off">
+        <button type="submit">Отправить</button>
+        <button type="button" id="leave_channel">Покинуть канал</button>
+    </form>
+    <!-- <div id="user_email" style="display: block;">{{ email }}</div> -->
+
+    <!-- ---------------------------------------------------------------------------------- -->
+    <script type="text/javascript">
+        let socket = io.connect('http://' + document.domain + ':4043', {
+            query: {
+                email: '{{ email }}',
+                channel_link: '{{ channel_link }}'
+            }
+        });
+
+        socket.on('message', function (data) {
+            $('#chat').append(data + '<br>');
+        });
+
+        socket.on('user_list', function (data) {
+            $('#user_list').empty();
+            data.users.forEach(function (user) {
+                $('#user_list').append('<li>' + user + '</li>');
+            });
+        });
+
+        $(document).ready(function () {
+            let username = `{{ email }}`;
+            let room = '{{ channel_link }}';
+            socket.emit('join', { 'name': username, 'channel_link': room });
+            console.log(username);
+            console.log(room);
+
+
+            // Отправка сообщения
+            $('#chat_form').submit(function (e) {
+                e.preventDefault();
+                let message = $('#message').val();
+                socket.emit('message', { 'username': username, 'message': message, 'room': room });
+                $('#message').val('');
+            });
+
+            // Покинуть канал
+            $('#leave_channel').click(function () {
+                socket.emit('leave', { 'username': username, 'room': room });
+                socket.disconnect();
+                $('#chat').append('<span class="info-message">' + username + ' покинул канал</span><br>');
+                window.location.href = '/';  // Возвращаемся на главную страницу
+            });
+
+            $(window).on('beforeunload', function () {
+                socket.emit('leave', { 'username': username, 'room': room });
+                socket.disconnect();
+            });
+        });
+
+    </script>
+</body>
+
+</html>

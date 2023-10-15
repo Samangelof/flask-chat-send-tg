@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <h1>Registration Form</h1>
+    <form id="registration-form" method="POST" action="/register" style="width: 600px; margin: 10px auto;">
+        <label for="name">Name:</label>
+        <input type="text" name="name" id="name" required>
+        <br><br>
+
+        <label for="email">Email:</label>
+        <input type="email" name="email" id="email" required>
+        <br><br>
+
+        <label for="phone">Phone:</label>
+        <input type="text" name="phone" id="phone" required maxlength="20">
+        <div id="error-message" style="color: red;"></div>
+        <br><br>
+        <br><br>
+
+
+        <button type="submit">Register</button>
+    </form>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 8px;
+            /* Уменьшили внутренний отступ */
+            margin-bottom: 15px;
+            /* Уменьшили внешний отступ */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            height: 30px;
+            /* Установили фиксированную высоту */
+        }
+
+        button {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+
+    <script>
+        document.getElementById('phone').addEventListener('input', function (e) {
+            const inputValue = e.target.value;
+            const pattern = /^[0-9]*$/;
+            if (!pattern.test(inputValue)) {
+                e.target.value = inputValue.replace(/[^0-9]/g, '');
+            }
+        });
+        document.getElementById('registration-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const errorMessage = document.getElementById('error-message');
+
+
+            const emailValidationRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailValidationRegex.test(email)) {
+                errorMessage.textContent = 'Некорректный email-адрес. Пожалуйста, введите правильный email.';
+            } else {
+                fetch('/check_email/' + email)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            errorMessage.textContent = 'Пользователь с таким email уже существует. Пожалуйста, выберите другой email.';
+                        } else {
+                            fetch('/check_user/' + phone)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.exists) {
+                                        errorMessage.textContent = 'Пользователь с таким номером телефона уже существует. Пожалуйста, выберите другой номер.';
+                                    } else {
+                                        this.submit();
+                                    }
+                                });
+                        }
+                    });
+            }
+        });
+
+    </script>
+</body>
+
+</html>
